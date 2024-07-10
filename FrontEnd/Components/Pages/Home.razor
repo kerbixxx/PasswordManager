@@ -10,11 +10,11 @@
 
 <div class="container">
     <div class="left-side">
-        <input type="text" @bind="searchQuery" placeholder="Поиск..." />
-        <button @onclick="FilterCredentials">Применить фильтрацию</button>
+        <input type="text" @bind="searchQuery" placeholder="Search..." />
+        <button @onclick="FilterCredentials">Apply filter</button>
     </div>
     <div class="right-side">
-        <button @onclick="OpenDialogAsync">Добавить запись</button>
+        <button @onclick="OpenDialogAsync">Add new credential</button>
     </div>
 </div>
 @if (filteredCredentials == null)
@@ -40,7 +40,10 @@ else
             {
                 <tr>
                     <td>@item.Name</td>
-                    <td>@item.Password</td>
+                    <td>
+                        <button @onclick="() => TogglePasswordVisibility(item)">Show/Hide</button>
+                        <span> @if(item.IsPasswordVisible) {@item.Password} else {@("********")}</span>
+                    </td>
                     <td>@item.CreationTime.ToString("g")</td>
                 </tr>
             }
@@ -49,16 +52,22 @@ else
 }
 
 @code {
-    private List<Credential> filteredCredentials;
+    private List<CredentialDto> filteredCredentials;
     private string searchQuery { get; set; } = "";
 
     private bool showModal = false;
 
-    private Task OpenDialogAsync()
+    private async Task OpenDialogAsync()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<CreateCredentialDialog>("Create credential", options);
 
-        return DialogService.ShowAsync<CreateCredentialDialog>("Simple Dialog", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await FilterCredentials();
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -70,7 +79,7 @@ else
     {
         try
         {
-            var sortedCredentials = await HttpClient.GetFromJsonAsync<List<Credential>>($"api/credential?name={searchQuery}");
+            var sortedCredentials = await HttpClient.GetFromJsonAsync<List<CredentialDto>>($"api/credential?name={searchQuery}");
             filteredCredentials = sortedCredentials.OrderByDescending(c => c.CreationTime).ToList();
         }
         catch (HttpRequestException ex)
@@ -79,4 +88,11 @@ else
         }
         StateHasChanged();
     }
+
+    private void TogglePasswordVisibility(CredentialDto item)
+    {
+        item.IsPasswordVisible = !item.IsPasswordVisible;
+        StateHasChanged(); // Обновляем UI после изменения состояния
+    }
+
 }

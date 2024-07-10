@@ -29,11 +29,27 @@ namespace BackEnd.Controllers
             if (string.IsNullOrEmpty(name))
             {
                 var credentials = await query.ToListAsync();
-                return Ok(credentials);
+                var vmCredentials = credentials.Select(c => new CredentialDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Password = c.Password,
+                    CreationTime = c.CreationTime,
+                    IsPasswordVisible = false
+                }).ToList();
+                return Ok(vmCredentials);
             }
 
-            var filteredCredentials = await query.Where(c => c.Name.Contains(name)).OrderBy(x=>x.CreationTime).ToListAsync();
-            return Ok(filteredCredentials);
+            var filteredCredentials = await query.Where(c => c.Name.Contains(name)).OrderBy(x => x.CreationTime).ToListAsync();
+            var vmFilteredCredentials = filteredCredentials.Select(c => new CredentialDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Password = c.Password,
+                CreationTime = c.CreationTime,
+                IsPasswordVisible = false
+            }).ToList();
+            return Ok(vmFilteredCredentials);
         }
 
         [HttpGet("{id}")]
@@ -59,6 +75,11 @@ namespace BackEnd.Controllers
             if (!strategy.IsValidPassword(dto.Password))
             {
                 return BadRequest("Invalid Password");
+            }
+
+            if(_db.Credentials.Where(c=>c.Name == dto.Name).Any())
+            {
+                return BadRequest("Name already exists");
             }
 
             await _db.Credentials.AddAsync(new Credential(dto.Name, dto.Password));
