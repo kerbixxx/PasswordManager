@@ -1,0 +1,82 @@
+﻿@page "/"
+@using BackEnd.DTOs
+@using BackEnd.Entities
+@using BackEnd.Interfaces
+@using FrontEnd.Components.Shared
+@using static MudBlazor.CategoryTypes
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div class="container">
+    <div class="left-side">
+        <input type="text" @bind="searchQuery" placeholder="Поиск..." />
+        <button @onclick="FilterCredentials">Применить фильтрацию</button>
+    </div>
+    <div class="right-side">
+        <button @onclick="OpenDialogAsync">Добавить запись</button>
+    </div>
+</div>
+@if (filteredCredentials == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!filteredCredentials.Any())
+{
+    <p>No matching records found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Password</th>
+                <th>Date Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in filteredCredentials)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Password</td>
+                    <td>@item.CreationTime.ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Credential> filteredCredentials;
+    private string searchQuery { get; set; } = "";
+
+    private bool showModal = false;
+
+    private Task OpenDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        return DialogService.ShowAsync<CreateCredentialDialog>("Simple Dialog", options);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FilterCredentials();
+    }
+
+    private async Task FilterCredentials()
+    {
+        try
+        {
+            var sortedCredentials = await HttpClient.GetFromJsonAsync<List<Credential>>($"api/credential?name={searchQuery}");
+            filteredCredentials = sortedCredentials.OrderByDescending(c => c.CreationTime).ToList();
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Request exception: {ex.Message}");
+        }
+        StateHasChanged();
+    }
+}
