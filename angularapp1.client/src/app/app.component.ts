@@ -12,8 +12,8 @@ interface CredentialDto {
   id: number;
   name: string;
   password: string;
-  creationTime: string;
-  isVisible: Boolean;
+  creationTime: Date;
+  isPasswordVisible: Boolean;
 }
 
 @Component({
@@ -28,20 +28,27 @@ export class AppComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-    this.getForecasts();
     this.getCredentials();
+    this.getForecasts();
   }
 
-  getCredentials() {
-    this.http.get<CredentialDto[]>('/credential', { responseType: 'json' }).subscribe(
+  getCredentials(filter?: string) {
+    let url = '/credential';
+
+    if (filter) {
+      url += `?name=${filter}`;
+    }
+
+    this.http.get<CredentialDto[]>(url).subscribe(
       (result) => {
         this.credentials = result;
       },
       (error) => {
-        console.error(error);
+        console.error('Ошибка при получении учетных данных:', error);
       }
     );
   }
+
 
   getForecasts() {
     this.http.get<WeatherForecast[]>('/weatherforecast').subscribe(

@@ -38,7 +38,7 @@ namespace BackEnd.Controllers
                     CreationTime = c.CreationTime,
                     IsPasswordVisible = false
                 });
-                return vmCredentials;
+                return vmCredentials.ToArray();
             }
 
             var filteredCredentials = query.Where(c => c.Name.Contains(name)).OrderBy(x => x.CreationTime);
