@@ -36,11 +36,11 @@ namespace BackEnd.Controllers
                     Password = c.Password,
                     CreationTime = c.CreationTime,
                     IsPasswordVisible = false
-                }).ToList();
+                });
                 return Ok(vmCredentials);
             }
 
-            var filteredCredentials = await query.Where(c => c.Name.Contains(name)).OrderBy(x => x.CreationTime).ToListAsync();
+            var filteredCredentials = query.Where(c => c.Name.Contains(name)).OrderBy(x => x.CreationTime);
             var vmFilteredCredentials = filteredCredentials.Select(c => new CredentialDto
             {
                 Id = c.Id,
@@ -48,7 +48,7 @@ namespace BackEnd.Controllers
                 Password = c.Password,
                 CreationTime = c.CreationTime,
                 IsPasswordVisible = false
-            }).ToList();
+            });
             return Ok(vmFilteredCredentials);
         }
 
