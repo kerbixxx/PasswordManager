@@ -1,13 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-}
-
 interface CredentialDto {
   id: number;
   name: string;
@@ -22,14 +15,12 @@ interface CredentialDto {
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  public forecasts: WeatherForecast[] = [];
   public credentials: CredentialDto[] = [];
 
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.getCredentials();
-    this.getForecasts();
   }
 
   getCredentials(filter?: string) {
@@ -49,17 +40,14 @@ export class AppComponent implements OnInit {
     );
   }
 
-
-  getForecasts() {
-    this.http.get<WeatherForecast[]>('/weatherforecast').subscribe(
-      (result) => {
-        this.forecasts = result;
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
+  hidePassword(credential: CredentialDto): string {
+    return credential.isPasswordVisible ? credential.password : credential.password.replace(/./g, '*');
   }
+
+  togglePasswordVisibility(credential: CredentialDto) {
+    credential.isPasswordVisible = !credential.isPasswordVisible;
+  }
+
 
   title = 'angularapp1.client';
 }

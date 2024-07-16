@@ -21,5 +21,6 @@ namespace BackEnd.Entities
             Name = updateDto.Name;
             Password = updateDto.Password;
         }
+
     }
 }
